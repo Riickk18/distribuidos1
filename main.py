@@ -10,6 +10,7 @@ nombreArchivos = ['audit.log.2018-10-03']
 #Funciones
 def llenar_logs():
     cadena = ''
+    global logs
     for x in nombreArchivos:
         with open(x) as archivo:
             cadena = archivo.read()
