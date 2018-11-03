@@ -1,21 +1,20 @@
 #Imports
+import gzip
 
-
-
-
-#Variables Globales
+#Variables globales
 logs = []
-nombreArchivos = ['audit.log.2018-10-03']
+nombreArchivos = ['/home/public/201915/muestra1/audit.log.2018-10-03.gz']
 
-#Funciones
+#funciones
 def llenar_logs():
-    cadena = ''
+    f = ''
     global logs
     for x in nombreArchivos:
-        with open(x) as archivo:
-            cadena = archivo.read()
-            logs += cadena.split('\n')
-    print(logs[0:10])
+        f=gzip.GzipFile(fileobj=open(x, 'rb'))
+        cadena = f.read()
+        logs += cadena.split('\n')
+        f.close()
+    print(logs[:10])
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     llenar_logs()
