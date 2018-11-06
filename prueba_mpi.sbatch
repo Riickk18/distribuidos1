@@ -4,7 +4,7 @@
 #SBATCH --job-name=hello_world_py
 #SBATCH --time=01:00
 #SBATCH --output=hello_world_py.%j.out
-#SBATCH --ntasks=10
+#SBATCH --ntasks=8
 #
 
 echo "----------Preparando el entorno-------------"
