@@ -4,13 +4,13 @@
 #SBATCH --job-name=hello_world_py
 #SBATCH --time=01:00
 #SBATCH --output=hello_world_py.%j.out
-#SBATCH --ntasks=8
+#SBATCH --ntasks=9
 #
 
 echo "----------Preparando el entorno-------------"
 module purge
-module load prun gnu7/7.3.0 openmpi3/3.1.0 py2-mpi4py/3.0.0
+module load prun gnu7 openmpi3 py2-mpi4py
 
 echo "-------Inicio de Proceso en mpi Python------"
-prun hello_world.py
+prun python hello_world.py
 echo "-------Fin de Proceso en mpi Python------"
