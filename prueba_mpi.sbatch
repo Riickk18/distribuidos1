@@ -12,5 +12,5 @@ module purge
 module load prun gnu7 openmpi3 py2-mpi4py
 
 echo "-------Inicio de Proceso en mpi Python------"
-prun python hello_world.py
+prun python run8.py
 echo "-------Fin de Proceso en mpi Python------"
