@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from mpi4py import MPI
-#import geoip2.database
+from geoip2.errors import AddressNotFoundError
+import geoip2.database
 #import pygeoip
 
 #Inicializar el COMM_WORLD y sus mecanismos
@@ -139,7 +140,6 @@ while(x<longitud):
     info = scatter[x]
     confirma = info[24:28]
     if(confirma == "WARN"):
-        #gi = pygeoip.GeoIP('GeoLiteCity.dat')
         ip1 = info.split("oip=")
         ip2 = ip1[1].split(";")
         ip = ip2[0]
@@ -157,10 +157,15 @@ while(x<longitud):
             listaCiudad.append("LocalHost")
             listaPais.append("LocalHost")
         else:
-            #pais = gi.country_name_by_addr(ip)
+            #gi = pygeoip.GeoIP('GeoIPCity.dat')
             #ciudad = gi.time_zone_by_addr(ip)
             #listaCiudad.append(ciudad)
-            #listaPais.append(pais)
+            #listaCiudad.append(gi.time_zone_by_addr(ip))
+            reader = geoip2.database.Reader('/home/public/examples/geoip_test/GeoLite2-Country_20181023/GeoLite2-Country.mmdb')
+            response = reader.country(ip)
+            listaPais.append(format(response.country.name))
+            #response = reader.city(ip)
+            #listaCiudad.append(format(response.city.name))
             listaIp.append(ip)
             listaHora.append(hora)
             listaCorreo.append(correo)
@@ -170,7 +175,7 @@ while(x<longitud):
 #Devolver Scatter con Gatter
 ips = comm.gather(listaIp, root=0)
 ipsLocal = comm.gather(listaIpLocal, root=0)
-#paises = comm.gather(listaPais, root=0)
+paises = comm.gather(listaPais, root=0)
 #ciudades = comm.gather(listaCiudad, root=0)
 horas = comm.gather(listaHora, root=0)
 correos = comm.gather(listaCorreo, root=0)
@@ -179,14 +184,14 @@ protocolos = comm.gather(listaProtocolo, root=0)
 if(rank ==0):
     organizar(ips, arregloIp, contadorIp)
     organizar(ipsLocal, arregloIpLocal, contadorIpLocal)
-    #organizar(paises, arregloPais, contadorPais)
+    organizar(paises, arregloPais, contadorPais)
     #organizar(ciudades, arregloCiudad, contadorCiudad)
     organizar(horas, arregloHora, contadorHora)
     organizar(correos, arregloCorreo, contadorCorreo)
     organizar(protocolos, arregloProtocolo, contadorProtocolo)
     top20(arregloIp, contadorIp)
     top20(arregloIpLocal, contadorIpLocal)
-    #top20(arregloPais, contadorPais)
+    top20(arregloPais, contadorPais)
     #top20(arregloCiudad, contadorCiudad)
     top20(arregloHora, contadorHora)
     top20(arregloCorreo, contadorCorreo)
@@ -195,8 +200,8 @@ if(rank ==0):
     resultado(arregloIp,contadorIp)
     print('----------------- 20 IP-Local -------------')
     resultado(arregloIpLocal,contadorIpLocal)
-    #print('----------------- 20 PAISES -------------')
-    #resultado(arregloPais,contadorPais)
+    print('----------------- 20 PAISES -------------')
+    resultado(arregloPais,contadorPais)
     #print('----------------- 20 CIUDADES -------------')
     #resultado(arregloCiudad,contadorCiudad)
     print('----------------- 20 HORAS -------------')
