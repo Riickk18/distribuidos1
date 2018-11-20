@@ -8,11 +8,9 @@ import geoip2.database
 comm = MPI.COMM_WORLD
 rank = comm.rank
 size = comm.Get_size()
+name = MPI.Get_processor_name()
 
-#Arreglo Principal
 arregloPrincipal = []
-
-#Arreglos y Contadores de algunos Arreglos
 arregloIp = []
 contadorIp = []
 arregloIpLocal = []
@@ -28,7 +26,6 @@ contadorCorreo = []
 arregloProtocolo = []
 contadorProtocolo = []
 
-#Fragmento
 fragmento = 0
 
 #Verifica cuantos procesos son y crear Arreglos necesarios
@@ -40,18 +37,34 @@ def picar(size):
         x += 1
     fragmento = size-1
 
-#Leemos los Logs e ingresa en el arreglo
-def leerLog(archivo, longitud):
+# #Leemos los Logs e ingresa en el arreglo
+# def leerLog(archivo, longitud):
+#     global fragmento
+#     x,y = 0,0
+#     while(x<longitud):
+#         if(y>fragmento):
+#             y = 0
+#         txt = archivo.readline()
+#         if 'WARN' in txt:
+#             arregloPrincipal[y].append(txt)
+#             y += 1
+#             x += 1
+
+def leerLog(archivo):
+    cadena = archivo.read()
+    arregloLogs = cadena.split('\n')
+    arregloWarns = []
+    for x in arregloLogs:
+        if 'WARN' in x:
+            arregloWarns.append(x)
     global fragmento
-    x = 0
-    y = 0
-    while(x<longitud):
+    x,y = 0,0
+    while(x<len(arregloWarns)):
         if(y>fragmento):
-            y = 0
-        txt = archivo.readline()
-        arregloPrincipal[y].append(txt)
+            y=0
+        arregloPrincipal[y].append(arregloWarns[x])
         y += 1
-        x += 1
+        x+=1
 
 #Organizamos las lineas
 def organizar(arreglo, principal, contador):
@@ -118,15 +131,17 @@ def resultado(principal, contador):
 if(rank == 0):
     picar(size)
     archivo = open("audit.log.2018-10-04", "r")
-    longitud = len(open("audit.log.2018-10-04").readline())
-    leerLog(archivo, longitud)
+    leerLog(archivo)
+    print('Termine de leer Logs')
     archivo.close()
 else:
     arregloPrincipal = None
 
+print('\n Empezando el Scatter')
 scatter = comm.scatter(arregloPrincipal, root=0)
 
 #Procesamiento
+
 longitud = len(scatter)
 x = 0
 listaIp = []
@@ -166,6 +181,7 @@ while(x<longitud):
             listaCorreo.append(correo)
             listaProtocolo.append(protocolo)
     x += 1
+print('Termine, soy el proceso: ' +str(rank)+ ' del nodo: '+name)
 
 #Devolver Scatter con Gatter
 ips = comm.gather(listaIp, root=0)
