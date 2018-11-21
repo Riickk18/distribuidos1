@@ -37,19 +37,6 @@ def picar(size):
         x += 1
     fragmento = size-1
 
-# #Leemos los Logs e ingresa en el arreglo
-# def leerLog(archivo, longitud):
-#     global fragmento
-#     x,y = 0,0
-#     while(x<longitud):
-#         if(y>fragmento):
-#             y = 0
-#         txt = archivo.readline()
-#         if 'WARN' in txt:
-#             arregloPrincipal[y].append(txt)
-#             y += 1
-#             x += 1
-
 def leerLog(archivo):
     cadena = archivo.read()
     arregloLogs = cadena.split('\n')
@@ -137,7 +124,7 @@ if(rank == 0):
 else:
     arregloPrincipal = None
 
-print('\n Empezando el Scatter')
+print('\n Empezando el Scatter para el proceso '+str(rank))
 scatter = comm.scatter(arregloPrincipal, root=0)
 
 #Procesamiento
@@ -207,6 +194,25 @@ if(rank ==0):
     top20(arregloHora, contadorHora)
     top20(arregloCorreo, contadorCorreo)
     top20(arregloProtocolo, contadorProtocolo)
+
+
+    print('  #####  #       #     #  #####  ####### ####### ######     ######  ####### ####### #     # ### #     # #######  ')
+    print(' #    #  #       #     # #     #    #    #       #     #    #     # #       #       #     #  #  #     # #        ')
+    print(' #       #       #     # #          #    #       #     #    #     # #       #       #     #  #  #     # #        ')
+    print(' #       #       #     #  #####     #    #####   ######     ######  #####   #####   #######  #  #     # #####    ')
+    print(' #       #       #     #       #    #    #       #   #      #     # #       #       #     #  #   #   #  #        ')
+    print(' #    #  #       #     # #     #    #    #       #    #     #     # #       #       #     #  #    # #   #        ')
+    print(' #####  #######  #####   #####     #    ####### #     #    ######  ####### ####### #     # ###    #    #######   ')
+
+    print('                                    #     #  #####     #    ######  ')
+    print('                                    #     # #     #   # #   #     # ')
+    print('                                    #     # #        #   #  #     # ')
+    print('                                    #     # #       #     # ######  ')
+    print('                                    #     # #       ####### #     # ')
+    print('                                    #     # #     # #     # #     # ')
+    print('                                     #####   #####  #     # ######  ')
+
+
     print('-------------------------------------------------------------------------------------------------')
     print('--------------------------------- Direcciones IP Que Màs Atacan ---------------------------------')
     print('-------------------------------------------------------------------------------------------------')
