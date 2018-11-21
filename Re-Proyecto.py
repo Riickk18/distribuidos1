@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from mpi4py import MPI
 from geoip2.errors import AddressNotFoundError
-import geoip2.database
+import geoip2.database, gzip
 #import pygeoip
 
 #Inicializar el COMM_WORLD y sus mecanismos
@@ -12,7 +12,7 @@ name = MPI.Get_processor_name()
 
 
 #Variables Globales
-listaArchivos = ["audit.log.2018-10-04"]
+listaArchivos = ["audit.log.2018-10-04.gz"]
 arregloPrincipal = []
 arregloIp = []
 contadorIp = []
@@ -44,7 +44,7 @@ def crear_lista_procesos(size):
 def leer_logs():
     arregloLogs = []#arreglo que almacena todos los logs
     for x in listaArchivos:#Leer todos los archivos de LOGS
-        archivo = open(x, 'r')
+        archivo = gzip.GzipFile(fileobj=open(x, 'rb'))
         cadena = archivo.read()
         arregloLogs = arregloLogs + cadena.split('\n')
         archivo.close()
