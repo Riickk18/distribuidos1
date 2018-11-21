@@ -10,6 +10,9 @@ rank = comm.rank
 size = comm.Get_size()
 name = MPI.Get_processor_name()
 
+
+#Variables Globales
+listaArchivos = ["audit.log.2018-10-04"]
 arregloPrincipal = []
 arregloIp = []
 contadorIp = []
@@ -28,8 +31,8 @@ contadorProtocolo = []
 
 fragmento = 0
 
-#Verifica cuantos procesos son y crear Arreglos necesarios
-def picar(size):
+#Verifica cuantos procesos son y crea el número de arreglos necesarios
+def crear_lista_procesos(size):
     global fragmento
     x = 0
     while(x<size):
@@ -37,23 +40,15 @@ def picar(size):
         x += 1
     fragmento = size-1
 
-# #Leemos los Logs e ingresa en el arreglo
-# def leerLog(archivo, longitud):
-#     global fragmento
-#     x,y = 0,0
-#     while(x<longitud):
-#         if(y>fragmento):
-#             y = 0
-#         txt = archivo.readline()
-#         if 'WARN' in txt:
-#             arregloPrincipal[y].append(txt)
-#             y += 1
-#             x += 1
-
-def leerLog(archivo):
-    cadena = archivo.read()
-    arregloLogs = cadena.split('\n')
-    arregloWarns = []
+#Se lee el archivo de logs, seguidamente se verifican cuales son WARN y se añaden a la lista
+def leer_logs():
+    arregloLogs = []#arreglo que almacena todos los logs
+    for x in listaArchivos:#Leer todos los archivos de LOGS
+        archivo = open(x, 'r')
+        cadena = archivo.read()
+        arregloLogs = arregloLogs + cadena.split('\n')
+        archivo.close()
+    arregloWarns = []#arreglo que almacena solo los logs del tipo WARN
     for x in arregloLogs:
         if 'WARN' in x:
             arregloWarns.append(x)
@@ -64,7 +59,7 @@ def leerLog(archivo):
             y=0
         arregloPrincipal[y].append(arregloWarns[x])
         y += 1
-        x+=1
+        x += 1
 
 #Organizamos las lineas
 def organizar(arreglo, principal, contador):
@@ -111,7 +106,7 @@ def top20(principal, contador):
         contador[i] = temporal[i]
         i += 1
 
-#Mostramos
+#Funcion que muestra los resultados de cada TOP 20
 def resultado(principal, contador):
     x = 0
     y = 0
@@ -128,16 +123,16 @@ def resultado(principal, contador):
         x += 1
 
 ################################### M P I ########################################
-if(rank == 0):
-    picar(size)
-    archivo = open("audit.log.2018-10-04", "r")
-    leerLog(archivo)
-    print('Termine de leer Logs')
+if(rank == 0):#El maestro se encarga de leer los archivos y mandarlos a los otros procesos
+    crear_lista_procesos(size)
+    leer_logs()
+    print('\nNodo Maestro dice --> Termine de leer Logs')
     archivo.close()
+    print('\n Nodo Maestro dice --> Empezando el Scatter')
 else:
     arregloPrincipal = None
 
-print('\n Empezando el Scatter')
+#------Codigo Paralelizado--------------
 scatter = comm.scatter(arregloPrincipal, root=0)
 
 #Procesamiento
@@ -151,36 +146,34 @@ listaCiudad = []
 listaProtocolo = []
 listaHora = []
 listaCorreo = []
-while(x<longitud):
+for x in range(longitud):
     info = scatter[x]
     confirma = info[24:28]
-    if(confirma == "WARN"):
-        ip1 = info.split("oip=")
-        ip2 = ip1[1].split(";")
-        ip = ip2[0]
-        hora = info[11:13]
-        correo1 = info.split("account=")
-        correo2 = correo1[1].split(";")
-        correo = correo2[0]
-        protocolo1 = info.split("protocol=")
-        protocolo2 = protocolo1[1].split(";")
-        protocolo = protocolo2[0]
-        confirmaIpLocal = ip[0:7]
-        cofirmaIpNone = ip[0:6]
-        if(confirmaIpLocal == "192.168"):
-            listaIpLocal.append(ip)
-            listaCiudad.append("LocalHost")
-            listaPais.append("LocalHost")
-        else:
-            reader = geoip2.database.Reader('/home/group/distribuidos/201915_15579/10/workspace/GeoLite2-City_20181113/GeoLite2-City.mmdb')
-            response = reader.city(ip)
-            listaPais.append(format(response.country.name))
-            listaCiudad.append(format(response.city.name))
-            listaIp.append(ip)
-            listaHora.append(hora)
-            listaCorreo.append(correo)
-            listaProtocolo.append(protocolo)
-    x += 1
+    ip1 = info.split("oip=")
+    ip2 = ip1[1].split(";")
+    ip = ip2[0]
+    hora = info[11:13]
+    correo1 = info.split("account=")
+    correo2 = correo1[1].split(";")
+    correo = correo2[0]
+    protocolo1 = info.split("protocol=")
+    protocolo2 = protocolo1[1].split(";")
+    protocolo = protocolo2[0]
+    confirmaIpLocal = ip[0:7]
+    cofirmaIpNone = ip[0:6]
+    if(confirmaIpLocal == "192.168"):
+        listaIpLocal.append(ip)
+        listaCiudad.append("LocalHost")
+        listaPais.append("LocalHost")
+    else:
+        reader = geoip2.database.Reader('/home/group/distribuidos/201915_15579/10/workspace/GeoLite2-City_20181113/GeoLite2-City.mmdb')
+        response = reader.city(ip)
+        listaPais.append(format(response.country.name))
+        listaCiudad.append(format(response.city.name))
+        listaIp.append(ip)
+        listaHora.append(hora)
+        listaCorreo.append(correo)
+        listaProtocolo.append(protocolo)
 print('Termine, soy el proceso: ' +str(rank)+ ' del nodo: '+name)
 
 #Devolver Scatter con Gatter
@@ -207,29 +200,21 @@ if(rank ==0):
     top20(arregloHora, contadorHora)
     top20(arregloCorreo, contadorCorreo)
     top20(arregloProtocolo, contadorProtocolo)
-    print('-------------------------------------------------------------------------------------------------')
+    print('\n-------------------------------------------------------------------------------------------------')
     print('--------------------------------- Direcciones IP Que Màs Atacan ---------------------------------')
-    print('-------------------------------------------------------------------------------------------------')
     resultado(arregloIp,contadorIp)
-    #print('----------------- 20 IP-Local -------------')
-    #resultado(arregloIpLocal,contadorIpLocal)
-    print('-------------------------------------------------------------------------------------------------')
+    print('\n-------------------------------------------------------------------------------------------------')
     print('------------------------------------- Paises Que Màs Atacan -------------------------------------')
-    print('-------------------------------------------------------------------------------------------------')
     resultado(arregloPais,contadorPais)
-    print('-------------------------------------------------------------------------------------------------')
+    print('\n-------------------------------------------------------------------------------------------------')
     print('------------------------------------ Ciudades Que Màs Atacan ------------------------------------')
-    print('-------------------------------------------------------------------------------------------------')
     resultado(arregloCiudad,contadorCiudad)
-    print('-------------------------------------------------------------------------------------------------')
+    print('\n-------------------------------------------------------------------------------------------------')
     print('------------------------------------ Horas En Que Màs Atacan ------------------------------------')
-    print('-------------------------------------------------------------------------------------------------')
     resultado(arregloHora,contadorHora)
-    print('-------------------------------------------------------------------------------------------------')
+    print('\n-------------------------------------------------------------------------------------------------')
     print('------------------------------ Correos Electrònicos Que Màs Atacan ------------------------------')
-    print('-------------------------------------------------------------------------------------------------')
     resultado(arregloCorreo,contadorCorreo)
-    print('-------------------------------------------------------------------------------------------------')
+    print('\n-------------------------------------------------------------------------------------------------')
     print('-------------------------------------- Protocolos De Ataque -------------------------------------')
-    print('-------------------------------------------------------------------------------------------------')
     resultado(arregloProtocolo,contadorProtocolo)
