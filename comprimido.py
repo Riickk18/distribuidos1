@@ -49,10 +49,9 @@ def leer_logs():
     arregloLogs = []#arreglo que almacena todos los logs
     archivo = ''
     for x in listaArchivos:#Leer todos los archivos de LOGS
-        archivo = gzip.GzipFile(fileobj=open(x, 'rb'))
-        cadena = archivo.read()
-        arregloLogs += cadena.split('\n')
-        archivo.close()
+        with gzip.open(x, 'rb') as archivo:
+            cadena = archivo.read()
+            arregloLogs += cadena.split('\n')
     arregloWarns = []#arreglo que almacena solo los logs del tipo WARN
     for x in arregloLogs:
         if 'WARN' in x:
