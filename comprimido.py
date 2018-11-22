@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 from mpi4py import MPI
 from geoip2.errors import AddressNotFoundError
-import geoip2.database
+import geoip2.database, gzip
 from time import time
+#import pygeoip
 
 #Inicializar el COMM_WORLD y sus mecanismos
 comm = MPI.COMM_WORLD
@@ -13,7 +14,7 @@ name = MPI.Get_processor_name()
 
 #Variables Globales
 tiempo_inicial = time()
-listaArchivos = ["audit.log.2018-10-04", "audit.log.2018-10-03", "audit.log.2018-10-02"]
+listaArchivos = ["audit.log.2018-10-04.gz", "audit.log.2018-10-03.gz", "audit.log.2018-10-02.gz"]
 arregloPrincipal = []
 arregloIp = []
 contadorIp = []
@@ -47,7 +48,7 @@ def crear_lista_procesos(size):
 def leer_logs():
     arregloLogs = []#arreglo que almacena todos los logs
     for x in listaArchivos:#Leer todos los archivos de LOGS
-        archivo = open(x, 'r')
+        archivo = gzip.GzipFile(fileobj=open(x, 'rb'))
         cadena = archivo.read()
         arregloLogs = arregloLogs + cadena.split('\n')
         archivo.close()
@@ -130,8 +131,8 @@ if(rank == 0):#El maestro se encarga de leer los archivos y mandarlos a los otro
     crear_lista_procesos(size)
     leer_logs()
     print('\nNodo Maestro dice --> Termine de leer Logs')
-    #archivo.close()
-    print('\nNodo Maestro dice --> Empezando el Scatter')
+    archivo.close()
+    print('\n Nodo Maestro dice --> Empezando el Scatter')
 else:
     arregloPrincipal = None
 
@@ -153,6 +154,7 @@ listaFecha = []
 for x in range(longitud):
     info = scatter[x]
     confirma = info[24:28]
+    fecha = info[0:10]
     ip1 = info.split("oip=")
     ip2 = ip1[1].split(";")
     ip = ip2[0]
@@ -163,7 +165,6 @@ for x in range(longitud):
     protocolo1 = info.split("protocol=")
     protocolo2 = protocolo1[1].split(";")
     protocolo = protocolo2[0]
-    fecha = info[0:10]
     confirmaIpLocal = ip[0:7]
     cofirmaIpNone = ip[0:6]
     if(confirmaIpLocal == "192.168"):
@@ -177,9 +178,9 @@ for x in range(longitud):
         listaCiudad.append(format(response.city.name))
         listaIp.append(ip)
         listaHora.append(hora)
+        listaFecha.append(fecha)
         listaCorreo.append(correo)
         listaProtocolo.append(protocolo)
-        listaFecha.append(fecha)
 print('Termine, soy el proceso: ' +str(rank)+ ' del nodo: '+name)
 
 #Devolver Scatter con Gatter
@@ -209,6 +210,7 @@ if(rank ==0):
     top20(arregloCorreo, contadorCorreo)
     top20(arregloProtocolo, contadorProtocolo)
     top20(arregloFecha, contadorFecha)
+
     print('')
 
     print('  #####  #       #     #  #####  ####### ####### ######     ######  ####### ####### #     # ### #     # #######  ')
@@ -249,7 +251,8 @@ if(rank ==0):
     print('\n-------------------------------------------------------------------------------------------------')
     print('-------------------------------------- Fechas De Ataque -------------------------------------')
     resultado(arregloFecha,contadorFecha)
-
+    print('\n')
     tiempo_final = time()
     tiempo_ejecucion = tiempo_final - tiempo_inicial
     print ('El tiempo de ejecucion fue: '+str(tiempo_ejecucion)+' Seg') #En segundos
+

@@ -253,3 +253,4 @@ if(rank ==0):
     tiempo_final = time()
     tiempo_ejecucion = tiempo_final - tiempo_inicial
     print ('El tiempo de ejecucion fue: '+str(tiempo_ejecucion)+' Seg') #En segundos
+
