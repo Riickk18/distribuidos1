@@ -47,10 +47,11 @@ def crear_lista_procesos(size):
 #Se lee el archivo de logs, seguidamente se verifican cuales son WARN y se añaden a la lista
 def leer_logs():
     arregloLogs = []#arreglo que almacena todos los logs
+    archivo = ''
     for x in listaArchivos:#Leer todos los archivos de LOGS
         archivo = gzip.GzipFile(fileobj=open(x, 'rb'))
         cadena = archivo.read()
-        arregloLogs = arregloLogs + cadena.split('\n')
+        arregloLogs += cadena.split('\n')
         archivo.close()
     arregloWarns = []#arreglo que almacena solo los logs del tipo WARN
     for x in arregloLogs:
@@ -255,4 +256,3 @@ if(rank ==0):
     tiempo_final = time()
     tiempo_ejecucion = tiempo_final - tiempo_inicial
     print ('El tiempo de ejecucion fue: '+str(tiempo_ejecucion)+' Seg') #En segundos
-
