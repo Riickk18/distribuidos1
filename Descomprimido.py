@@ -13,7 +13,7 @@ name = MPI.Get_processor_name()
 
 #Variables Globales
 tiempo_inicial = time()
-listaArchivos = ["audit.log.2018-10-04", "audit.log.2018-10-03", "audit.log.2018-10-02"]
+listaArchivos = ["audit.log.2018-09-29", "audit.log.2018-09-30", "audit.log.2018-10-02", "audit.log.2018-10-03", "audit.log.2018-10-04", "audit.log.2018-10-05", "audit.log.2018-10-06", "audit.log.2018-10-07", "audit.log.2018-10-08", "audit.log.2018-10-09", "audit.log.2018-10-10", "audit.log.2018-10-11", "audit.log.2018-10-12", "audit.log.2018-10-13", "audit.log.2018-10-14", "audit.log.2018-10-15", "audit.log.2018-10-16"]
 arregloPrincipal = []
 arregloIp = []
 contadorIp = []
@@ -152,34 +152,37 @@ listaCorreo = []
 listaFecha = []
 for x in range(longitud):
     info = scatter[x]
-    confirma = info[24:28]
-    ip1 = info.split("oip=")
-    ip2 = ip1[1].split(";")
-    ip = ip2[0]
-    hora = info[11:13]
-    correo1 = info.split("account=")
-    correo2 = correo1[1].split(";")
-    correo = correo2[0]
-    protocolo1 = info.split("protocol=")
-    protocolo2 = protocolo1[1].split(";")
-    protocolo = protocolo2[0]
-    fecha = info[0:10]
-    confirmaIpLocal = ip[0:7]
-    cofirmaIpNone = ip[0:6]
-    if(confirmaIpLocal == "192.168"):
-        listaIpLocal.append(ip)
-        listaCiudad.append("LocalHost")
-        listaPais.append("LocalHost")
-    else:
-        reader = geoip2.database.Reader('/home/group/distribuidos/201915_15579/10/workspace/GeoLite2-City_20181113/GeoLite2-City.mmdb')
-        response = reader.city(ip)
-        listaPais.append(format(response.country.name))
-        listaCiudad.append(format(response.city.name))
-        listaIp.append(ip)
-        listaHora.append(hora)
-        listaCorreo.append(correo)
-        listaProtocolo.append(protocolo)
-        listaFecha.append(fecha)
+    try:
+        confirma = info[24:28]
+        ip1 = info.split("oip=")
+        ip2 = ip1[1].split(";")
+        ip = ip2[0]
+        hora = info[11:13]
+        correo1 = info.split("account=")
+        correo2 = correo1[1].split(";")
+        correo = correo2[0]
+        protocolo1 = info.split("protocol=")
+        protocolo2 = protocolo1[1].split(";")
+        protocolo = protocolo2[0]
+        fecha = info[0:10]
+        confirmaIpLocal = ip[0:7]
+        cofirmaIpNone = ip[0:6]
+        if(confirmaIpLocal == "192.168"):
+            listaIpLocal.append(ip)
+            listaCiudad.append("LocalHost")
+            listaPais.append("LocalHost")
+        else:
+            reader = geoip2.database.Reader('/home/group/distribuidos/201915_15579/10/workspace/GeoLite2-City_20181113/GeoLite2-City.mmdb')
+            response = reader.city(ip)
+            listaPais.append(format(response.country.name))
+            listaCiudad.append(format(response.city.name))
+            listaIp.append(ip)
+            listaHora.append(hora)
+            listaCorreo.append(correo)
+            listaProtocolo.append(protocolo)
+            listaFecha.append(fecha)
+    except IndexError:
+        pass
 print('Termine, soy el proceso: ' +str(rank)+ ' del nodo: '+name)
 
 #Devolver Scatter con Gatter
@@ -253,4 +256,3 @@ if(rank ==0):
     tiempo_final = time()
     tiempo_ejecucion = tiempo_final - tiempo_inicial
     print ('El tiempo de ejecucion fue: '+str(tiempo_ejecucion)+' Seg') #En segundos
-
