@@ -135,6 +135,7 @@ if(rank == 0):#El maestro se encarga de leer los archivos y mandarlos a los otro
 else:
     arregloPrincipal = None
 
+tiempo_inicialn = time()
 #------Codigo Paralelizado--------------
 scatter = comm.scatter(arregloPrincipal, root=0)
 
@@ -183,7 +184,9 @@ for x in range(longitud):
             listaFecha.append(fecha)
     except IndexError:
         pass
-print('Termine, soy el proceso: ' +str(rank)+ ' del nodo: '+name)
+tiempo_finaln = time()
+tiempo_ejecucion = tiempo_finaln - tiempo_inicialn
+print ('Termine, El tiempo de ejecucion fue: '+str(tiempo_ejecucion)+' Seg del proceso: ' +str(rank)+ ' del nodo: '+name) #En segundos
 
 #Devolver Scatter con Gatter
 ips = comm.gather(listaIp, root=0)
